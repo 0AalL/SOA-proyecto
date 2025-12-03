@@ -1,92 +1,283 @@
 <!doctype html>
 <html lang="es">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Gestión de Alumnos (Cliente)</title>
-    <style>
-        body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding: 20px; background: #f6f8fa; color: #111; }
-        h1 { margin-bottom: 8px; }
-        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 18px; border-radius: 8px; box-shadow: 0 6px 18px rgba(20,20,20,0.06); }
-        form { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
-        label { display:block; font-size: 13px; margin-bottom: 4px; color:#444; }
-        input[type="text"], input[type="tel"] { width:100%; padding:8px 10px; border-radius:6px; border:1px solid #d1d5db; box-sizing:border-box; }
-        .full { grid-column: 1 / -1; }
-        button { padding:8px 12px; border-radius:6px; border: none; cursor:pointer; }
-        button.primary { background:#0b74de; color:#fff; }
-        button.warning { background:#f59e0b; color:#fff; }
-        button.danger { background:#ef4444; color:#fff; }
-        table { width:100%; border-collapse: collapse; margin-top: 14px; }
-        th, td { text-align:left; padding:10px; border-bottom:1px solid #eee; font-size:14px; }
-        th { background:#fafafa; color:#333; font-weight:600; }
-        .actions button { margin-right:6px; }
-        .status { margin-top:8px; font-size:13px; color:#444; }
-        .small { font-size:13px; color:#666; }
-        .searchRow { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
-        .center { text-align:center; }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gestión de Alumnos (Cliente)</title>
+  <style>
+    :root { --uta-rojo:#A50000; --uta-rojo-osc:#7F0000; --uta-gris:#5A5A5A; --uta-gris-claro:#D9D9D9; --bg:#f2f2f2; --text:#1b1b1b; }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding: 24px; background: var(--bg); color: var(--text); }
+    h1 { margin-bottom: 12px; font-size: 28px; color: var(--uta-rojo); display:flex; align-items:center; justify-content:space-between; }
+    .container { max-width: 1280px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 10px; box-shadow: 0 6px 18px rgba(20,20,20,0.06); border: 1px solid var(--uta-gris-claro); }
+    .toolbar { display:flex; gap:10px; align-items:center; margin-bottom:16px; }
+    input[type="text"], input[type="tel"] { width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--uta-gris-claro); box-sizing:border-box; font-size:15px; }
+    button { padding:10px 14px; border-radius:8px; border: none; cursor:pointer; font-size:15px; }
+    button.primary { background: var(--uta-rojo); color:#fff; } button.primary:hover { background: var(--uta-rojo-osc); }
+    button.warning { background: var(--uta-gris); color:#fff; } button.warning:hover { background:#3f3f3f; }
+    button.danger { background:#b30000; color:#fff; }
+    table { width:100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { text-align:left; padding:12px; border-bottom:1px solid var(--uta-gris-claro); font-size:15px; }
+    th { background:#fafafa; color:var(--uta-gris); font-weight:600; }
+    .actions button { margin-right:8px; }
+    .right { margin-left:auto; display:flex; gap:8px; }
+
+    /* ===== Modales ===== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none; /* se muestra con display:flex al abrir */
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.35);
+      z-index: 1000;
+    }
+    .modal {
+      width: 100%;
+      max-width: 640px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+      overflow: hidden;
+      border: 1px solid var(--uta-gris-claro);
+      animation: modalIn .18s ease-out;
+    }
+    .modal header {
+      padding: 14px 16px;
+      font-weight: 600;
+      background: #fafafa;
+      border-bottom: 1px solid #eee;
+      color: var(--uta-gris);
+    }
+    .modal .content {
+      padding: 16px;
+    }
+    .modal .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 14px 16px;
+      border-top: 1px solid #eee;
+      background: #fafafa;
+    }
+    @keyframes modalIn {
+      from { transform: translateY(6px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Grid de formularios en modales */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .grid .full {
+      grid-column: 1 / -1;
+    }
+    .small {
+      display: block;
+      margin-top: 4px;
+      font-size: 12px;
+    }
+    .center { text-align: center; color: #666; }
+  </style>
 </head>
 <body>
 <div class="container">
-    <h1>CRUD Alumnos</h1>
-
-    <div class="searchRow">
-        <input id="searchCedula" type="text" placeholder="Buscar por cédula (ej. 0102030405)" />
-        <button id="btnBuscar" class="primary">Buscar</button>
-        <button id="btnRefrescar">Refrescar lista</button>
-        <div style="margin-left:auto">
-            <button id="btnLimpiar" class="warning">Limpiar formulario</button>
-        </div>
+  <h1>
+    Gestión UTA
+    <div class="right">
+      <button id="tabAlumnos" class="primary" title="Ver alumnos">Alumnos</button>
+      <button id="tabCursos" class="warning" title="Ver cursos">Cursos</button>
+      <button id="btnSalir" class="warning" title="Cerrar sesión">Salir</button>
     </div>
+  </h1>
 
-    <form id="alumnoForm" onsubmit="return false;">
-        <div>
-            <label for="cedula">Cédula</label>
-            <input id="cedula" type="text" required placeholder="Cédula (única)" />
-        </div>
+  <!-- Vista Alumnos -->
+  <div id="viewAlumnos">
+  <div class="toolbar">
+    <input id="searchCedula" type="text" placeholder="Buscar por cédula (subcadena)" style="flex:1;" />
+    <button id="btnBuscar" class="primary">Buscar</button>
+    <div class="right">
+      <button id="btnLimpiar" class="warning">Limpiar búsqueda</button>
+      <button id="btnAbrirCrear" class="primary">Crear alumno</button>
+    </div>
+  </div>
 
-        <div>
-            <label for="nombre">Nombre</label>
-            <input id="nombre" type="text" required placeholder="Nombre" />
-        </div>
+  <table id="tablaAlumnos" aria-live="polite">
+    <thead>
+      <tr>
+        <th>Cédula</th>
+        <th>Nombre</th>
+        <th>Apellido</th>
+        <th>Dirección</th>
+        <th>Teléfono</th>
+        <th>Curso</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  </div>
 
-        <div>
-            <label for="apellido">Apellido</label>
-            <input id="apellido" type="text" required placeholder="Apellido" />
-        </div>
-
-        <div>
-            <label for="telefono">Teléfono</label>
-            <input id="telefono" type="tel" placeholder="Teléfono" />
-        </div>
-
-        <div class="full">
-            <label for="direccion">Dirección</label>
-            <input id="direccion" type="text" placeholder="Dirección" />
-        </div>
-
-        <div class="full center">
-            <button id="btnCrear" class="primary">Crear alumno</button>
-            <button id="btnActualizar" class="warning" style="display:none;">Actualizar alumno</button>
-            <button id="btnCancelar" style="display:none;">Cancelar</button>
-        </div>
-    </form>
-
-    <div class="status" id="status">Estado: listo</div>
-
-    <table id="tablaAlumnos" aria-live="polite">
-        <thead>
+  <!-- Vista Cursos -->
+  <div id="viewCursos" style="display:none;">
+    <div class="toolbar">
+      <input id="searchCurso" type="text" placeholder="Buscar curso por nombre (subcadena)" style="flex:1;" />
+      <button id="btnBuscarCurso" class="primary">Buscar</button>
+      <div class="right">
+        <button id="btnLimpiarCurso" class="warning">Limpiar</button>
+        <button id="btnAbrirCrearCurso" class="primary">Crear curso</button>
+      </div>
+    </div>
+    <table id="tablaCursos">
+      <thead>
         <tr>
-            <th>Cédula</th>
-            <th>Nombre</th>
-            <th>Apellido</th>
-            <th>Dirección</th>
-            <th>Teléfono</th>
-            <th>Acciones</th>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          <th>Acciones</th>
         </tr>
-        </thead>
-        <tbody></tbody>
+      </thead>
+      <tbody></tbody>
     </table>
+  </div>
+</div>
+
+<!-- Modal Crear -->
+<div id="modalCrear" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal">
+    <header>Crear alumno</header>
+    <div class="content">
+      <form id="formCrear" onsubmit="return false;" class="grid">
+        <div>
+          <label for="cedula">Cédula</label>
+          <input id="cedula" type="text" required placeholder="Cédula (única)" minlength="10" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" title="Debe contener exactamente 10 dígitos" />
+          <small id="cedulaMsg" class="small" style="color:#b91c1c"></small>
+        </div>
+        <div>
+          <label for="nombre">Nombre</label>
+          <input id="nombre" type="text" required placeholder="Nombre" maxlength="100" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+" title="Solo letras y espacios, máx. 100 caracteres" />
+          <small id="nombreMsg" class="small" style="color:#b91c1c"></small>
+        </div>
+        <div>
+          <label for="apellido">Apellido</label>
+          <input id="apellido" type="text" required placeholder="Apellido" maxlength="100" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+" title="Solo letras y espacios, máx. 100 caracteres" />
+          <small id="apellidoMsg" class="small" style="color:#b91c1c"></small>
+        </div>
+        <div>
+          <label for="telefono">Teléfono</label>
+          <input id="telefono" type="tel" placeholder="Teléfono" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" title="10 dígitos" />
+          <small id="telefonoMsg" class="small" style="color:#b91c1c"></small>
+        </div>
+        <div class="full">
+          <label for="direccion">Dirección</label>
+          <input id="direccion" type="text" placeholder="Dirección" maxlength="200" />
+          <small id="direccionMsg" class="small" style="color:#b91c1c"></small>
+        </div>
+        <div class="full">
+          <small id="crearError" class="small" style="color:#b91c1c"></small>
+        </div>
+      </form>
+    </div>
+    <div class="actions">
+      <button id="btnCrear" class="primary">Crear</button>
+      <button data-close="modalCrear">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar -->
+<div id="modalEditar" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal">
+    <header>Editar alumno</header>
+    <div class="content">
+      <form id="formEditar" onsubmit="return false;" class="grid">
+        <div>
+          <label for="cedulaEdit">Cédula</label>
+          <input id="cedulaEdit" type="text" disabled />
+        </div>
+        <div>
+          <label for="nombreEdit">Nombre</label>
+          <input id="nombreEdit" type="text" required maxlength="100" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+" title="Solo letras y espacios, máx. 100 caracteres" />
+          <small id="nombreEditMsg" class="small" style="color:#b91c1c"></small>
+        </div>
+        <div>
+          <label for="apellidoEdit">Apellido</label>
+          <input id="apellidoEdit" type="text" required maxlength="100" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+" title="Solo letras y espacios, máx. 100 caracteres" />
+          <small id="apellidoEditMsg" class="small" style="color:#b91c1c"></small>
+        </div>
+        <div>
+          <label for="telefonoEdit">Teléfono</label>
+          <input id="telefonoEdit" type="tel" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" title="10 dígitos" />
+          <small id="telefonoEditMsg" class="small" style="color:#b91c1c"></small>
+        </div>
+        <div class="full">
+          <label for="direccionEdit">Dirección</label>
+          <input id="direccionEdit" type="text" maxlength="200" />
+          <small id="direccionEditMsg" class="small" style="color:#b91c1c"></small>
+        </div>
+        <div class="full">
+          <small id="editarError" class="small" style="color:#b91c1c"></small>
+        </div>
+      </form>
+    </div>
+    <div class="actions">
+      <div class="right" style="margin-left:0;">
+        <select id="selectCursoAsignar" title="Asignar curso" style="max-width:240px;"></select>
+        <button id="btnAsignarCurso" class="primary" title="Asignar curso al alumno">Asignar curso</button>
+      </div>
+      <button id="btnActualizar" class="warning">Actualizar</button>
+      <button id="btnCancelar" data-close="modalEditar">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Crear Curso -->
+<div id="modalCrearCurso" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal">
+    <header>Crear curso</header>
+    <div class="content">
+      <form id="formCrearCurso" onsubmit="return false;" class="grid">
+        <div class="full">
+          <label for="cursoNombre">Nombre</label>
+          <input id="cursoNombre" type="text" required maxlength="150" />
+          <small id="cursoNombreMsg" class="small" style="color:#b91c1c"></small>
+        </div>
+        <div class="full">
+          <label for="cursoDescripcion">Descripción</label>
+          <input id="cursoDescripcion" type="text" maxlength="300" />
+          <small id="cursoDescripcionMsg" class="small" style="color:#b91c1c"></small>
+        </div>
+        <div class="full">
+          <small id="crearCursoError" class="small" style="color:#b91c1c"></small>
+        </div>
+      </form>
+    </div>
+    <div class="actions">
+      <button id="btnCrearCurso" class="primary">Crear</button>
+      <button data-close="modalCrearCurso">Cancelar</button>
+    </div>
+  </div>
+  </div>
+
+<!-- Modal Asignar Curso (rápido desde tabla) -->
+<div id="modalAsignarCurso" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal">
+    <header>Asignar curso</header>
+    <div class="content">
+      <div class="grid">
+        <div class="full">
+          <label for="selectCursoAsignarTabla">Curso</label>
+          <select id="selectCursoAsignarTabla" style="width:100%;"></select>
+          <small id="asignarCursoMsg" class="small" style="color:#b91c1c"></small>
+        </div>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="btnAsignarCursoTabla" class="primary">Asignar</button>
+      <button data-close="modalAsignarCurso">Cancelar</button>
+    </div>
+  </div>
 </div>
 
 <script src="app.js"></script>
