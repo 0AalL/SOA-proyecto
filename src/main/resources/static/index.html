@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Gestión de Alumnos (Cliente)</title>
+    <style>
+        body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding: 20px; background: #f6f8fa; color: #111; }
+        h1 { margin-bottom: 8px; }
+        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 18px; border-radius: 8px; box-shadow: 0 6px 18px rgba(20,20,20,0.06); }
+        form { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+        label { display:block; font-size: 13px; margin-bottom: 4px; color:#444; }
+        input[type="text"], input[type="tel"] { width:100%; padding:8px 10px; border-radius:6px; border:1px solid #d1d5db; box-sizing:border-box; }
+        .full { grid-column: 1 / -1; }
+        button { padding:8px 12px; border-radius:6px; border: none; cursor:pointer; }
+        button.primary { background:#0b74de; color:#fff; }
+        button.warning { background:#f59e0b; color:#fff; }
+        button.danger { background:#ef4444; color:#fff; }
+        table { width:100%; border-collapse: collapse; margin-top: 14px; }
+        th, td { text-align:left; padding:10px; border-bottom:1px solid #eee; font-size:14px; }
+        th { background:#fafafa; color:#333; font-weight:600; }
+        .actions button { margin-right:6px; }
+        .status { margin-top:8px; font-size:13px; color:#444; }
+        .small { font-size:13px; color:#666; }
+        .searchRow { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
+        .center { text-align:center; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>CRUD Alumnos</h1>
+
+    <div class="searchRow">
+        <input id="searchCedula" type="text" placeholder="Buscar por cédula (ej. 0102030405)" />
+        <button id="btnBuscar" class="primary">Buscar</button>
+        <button id="btnRefrescar">Refrescar lista</button>
+        <div style="margin-left:auto">
+            <button id="btnLimpiar" class="warning">Limpiar formulario</button>
+        </div>
+    </div>
+
+    <form id="alumnoForm" onsubmit="return false;">
+        <div>
+            <label for="cedula">Cédula</label>
+            <input id="cedula" type="text" required placeholder="Cédula (única)" />
+        </div>
+
+        <div>
+            <label for="nombre">Nombre</label>
+            <input id="nombre" type="text" required placeholder="Nombre" />
+        </div>
+
+        <div>
+            <label for="apellido">Apellido</label>
+            <input id="apellido" type="text" required placeholder="Apellido" />
+        </div>
+
+        <div>
+            <label for="telefono">Teléfono</label>
+            <input id="telefono" type="tel" placeholder="Teléfono" />
+        </div>
+
+        <div class="full">
+            <label for="direccion">Dirección</label>
+            <input id="direccion" type="text" placeholder="Dirección" />
+        </div>
+
+        <div class="full center">
+            <button id="btnCrear" class="primary">Crear alumno</button>
+            <button id="btnActualizar" class="warning" style="display:none;">Actualizar alumno</button>
+            <button id="btnCancelar" style="display:none;">Cancelar</button>
+        </div>
+    </form>
+
+    <div class="status" id="status">Estado: listo</div>
+
+    <table id="tablaAlumnos" aria-live="polite">
+        <thead>
+        <tr>
+            <th>Cédula</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Dirección</th>
+            <th>Teléfono</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
