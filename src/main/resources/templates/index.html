@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Gestión de Alumnos (Cliente)</title>
+    <link rel="stylesheet" href="/css/index.css" />
+
+    <!-- CSRF token y header para JS -->
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+</head>
+<body>
+<div class="container">
+    <h1>
+        Gestión UTA
+        <div class="right">
+            <button id="tabAlumnos" class="primary" title="Ver alumnos">Alumnos</button>
+            <button id="tabCursos" class="warning" title="Ver cursos">Cursos</button>
+            <button id="btnSalir" class="warning" title="Cerrar sesión">Salir</button>
+        </div>
+    </h1>
+
+    <!-- Vista Alumnos -->
+    <div id="viewAlumnos">
+        <div class="toolbar">
+            <input id="searchCedula" type="text" placeholder="Buscar por cédula (subcadena)" style="flex:1;" />
+            <button id="btnBuscar" class="primary">Buscar</button>
+            <div class="right">
+                <button id="btnLimpiar" class="warning">Limpiar búsqueda</button>
+                <button id="btnAbrirCrear" class="primary">Crear alumno</button>
+            </div>
+        </div>
+
+        <table id="tablaAlumnos" aria-live="polite">
+            <thead>
+            <tr>
+                <th>Cédula</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Dirección</th>
+                <th>Teléfono</th>
+                <th>Curso</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Vista Cursos -->
+    <div id="viewCursos" style="display:none;">
+        <div class="toolbar">
+            <input id="searchCurso" type="text" placeholder="Buscar curso por nombre (subcadena)" style="flex:1;" />
+            <button id="btnBuscarCurso" class="primary">Buscar</button>
+            <div class="right">
+                <button id="btnLimpiarCurso" class="warning">Limpiar</button>
+                <button id="btnAbrirCrearCurso" class="primary">Crear curso</button>
+            </div>
+        </div>
+        <table id="tablaCursos">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Crear -->
+<div id="modalCrear" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal">
+        <header>Crear alumno</header>
+        <div class="content">
+            <form id="formCrear" onsubmit="return false;" class="grid">
+                <div>
+                    <label for="cedula">Cédula</label>
+                    <input id="cedula" type="text" required placeholder="Cédula (única)" minlength="10" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" title="Debe contener exactamente 10 dígitos" />
+                    <small id="cedulaMsg" class="small" style="color:#b91c1c"></small>
+                </div>
+                <div>
+                    <label for="nombre">Nombre</label>
+                    <input id="nombre" type="text" required placeholder="Nombre" maxlength="100" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+" title="Solo letras y espacios, máx. 100 caracteres" />
+                    <small id="nombreMsg" class="small" style="color:#b91c1c"></small>
+                </div>
+                <div>
+                    <label for="apellido">Apellido</label>
+                    <input id="apellido" type="text" required placeholder="Apellido" maxlength="100" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+" title="Solo letras y espacios, máx. 100 caracteres" />
+                    <small id="apellidoMsg" class="small" style="color:#b91c1c"></small>
+                </div>
+                <div>
+                    <label for="telefono">Teléfono</label>
+                    <input id="telefono" type="tel" placeholder="Teléfono" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" title="10 dígitos" />
+                    <small id="telefonoMsg" class="small" style="color:#b91c1c"></small>
+                </div>
+                <div class="full">
+                    <label for="direccion">Dirección</label>
+                    <input id="direccion" type="text" placeholder="Dirección" maxlength="200" />
+                    <small id="direccionMsg" class="small" style="color:#b91c1c"></small>
+                </div>
+                <div class="full">
+                    <small id="crearError" class="small" style="color:#b91c1c"></small>
+                </div>
+            </form>
+        </div>
+        <div class="actions">
+            <button id="btnCrear" class="primary">Crear</button>
+            <button data-close="modalCrear">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div id="modalEditar" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal">
+        <header>Editar alumno</header>
+        <div class="content">
+            <form id="formEditar" onsubmit="return false;" class="grid">
+                <div>
+                    <label for="cedulaEdit">Cédula</label>
+                    <input id="cedulaEdit" type="text" disabled />
+                </div>
+                <div>
+                    <label for="nombreEdit">Nombre</label>
+                    <input id="nombreEdit" type="text" required maxlength="100" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+" title="Solo letras y espacios, máx. 100 caracteres" />
+                    <small id="nombreEditMsg" class="small" style="color:#b91c1c"></small>
+                </div>
+                <div>
+                    <label for="apellidoEdit">Apellido</label>
+                    <input id="apellidoEdit" type="text" required maxlength="100" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+" title="Solo letras y espacios, máx. 100 caracteres" />
+                    <small id="apellidoEditMsg" class="small" style="color:#b91c1c"></small>
+                </div>
+                <div>
+                    <label for="telefonoEdit">Teléfono</label>
+                    <input id="telefonoEdit" type="tel" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" title="10 dígitos" />
+                    <small id="telefonoEditMsg" class="small" style="color:#b91c1c"></small>
+                </div>
+                <div class="full">
+                    <label for="direccionEdit">Dirección</label>
+                    <input id="direccionEdit" type="text" maxlength="200" />
+                    <small id="direccionEditMsg" class="small" style="color:#b91c1c"></small>
+                </div>
+                <div class="full">
+                    <small id="editarError" class="small" style="color:#b91c1c"></small>
+                </div>
+            </form>
+        </div>
+        <div class="actions">
+            <div class="right" style="margin-left:0;">
+                <select id="selectCursoAsignar" title="Asignar curso" style="max-width:240px;"></select>
+                <button id="btnAsignarCurso" class="primary" title="Asignar curso al alumno">Asignar curso</button>
+            </div>
+            <button id="btnActualizar" class="warning">Actualizar</button>
+            <button id="btnCancelar" data-close="modalEditar">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crear Curso -->
+<div id="modalCrearCurso" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal">
+        <header>Crear curso</header>
+        <div class="content">
+            <form id="formCrearCurso" onsubmit="return false;" class="grid">
+                <div class="full">
+                    <label for="cursoNombre">Nombre</label>
+                    <input id="cursoNombre" type="text" required maxlength="150" />
+                    <small id="cursoNombreMsg" class="small" style="color:#b91c1c"></small>
+                </div>
+                <div class="full">
+                    <label for="cursoDescripcion">Descripción</label>
+                    <input id="cursoDescripcion" type="text" maxlength="300" />
+                    <small id="cursoDescripcionMsg" class="small" style="color:#b91c1c"></small>
+                </div>
+                <div class="full">
+                    <small id="crearCursoError" class="small" style="color:#b91c1c"></small>
+                </div>
+            </form>
+        </div>
+        <div class="actions">
+            <button id="btnCrearCurso" class="primary">Crear</button>
+            <button data-close="modalCrearCurso">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Asignar Curso (rápido desde tabla) -->
+<div id="modalAsignarCurso" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal">
+        <header>Asignar curso</header>
+        <div class="content">
+            <div class="grid">
+                <div class="full">
+                    <label for="selectCursoAsignarTabla">Curso</label>
+                    <select id="selectCursoAsignarTabla" style="width:100%;"></select>
+                    <small id="asignarCursoMsg" class="small" style="color:#b91c1c"></small>
+                </div>
+            </div>
+        </div>
+        <div class="actions">
+            <button id="btnAsignarCursoTabla" class="primary">Asignar</button>
+            <button data-close="modalAsignarCurso">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
+

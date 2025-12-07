@@ -1,11 +1,4 @@
-// Si no hay credenciales, redirige a login
-(function ensureAuth() {
-  const u = sessionStorage.getItem('authUser');
-  const p = sessionStorage.getItem('authPass');
-  if (!u || !p) {
-    window.location.replace('login.html');
-  }
-})();
+
 
 const BASE_ALUMNOS = 'http://localhost:8088/api/alumnos';
 const BASE_CURSOS = 'http://localhost:8088/api/cursos';
@@ -446,7 +439,9 @@ btnActualizar.addEventListener('click', actualizarAlumno);
 btnCancelar.addEventListener('click', () => closeModal(modalEditar));
 btnBuscar.addEventListener('click', () => buscarPorCedula(searchCedula.value.trim()));
 btnLimpiar.addEventListener('click', async () => { searchCedula.value=''; await cargarTodos(); });
-btnSalir.addEventListener('click', () => { logout(); });
+btnSalir.addEventListener('click', async () => {
+  await logout();
+});
 
 // Tabs
 tabAlumnos.addEventListener('click', () => { viewAlumnos.style.display=''; viewCursos.style.display='none'; });
@@ -480,18 +475,37 @@ detectRole().then(async role => {
 
 // Auth helpers
 function authHeaders() {
-  const u = sessionStorage.getItem('authUser');
-  const p = sessionStorage.getItem('authPass');
-  if (!u || !p) return {};
-  const token = btoa(`${u}:${p}`);
-  return { 'Authorization': `Basic ${token}` };
+  const tokenMeta = document.querySelector('meta[name="_csrf"]');
+  const headerMeta = document.querySelector('meta[name="_csrf_header"]');
+  const headers = {};
+  if (tokenMeta && headerMeta) {
+    headers[headerMeta.content] = tokenMeta.content;
+  }
+  return headers;
 }
-function redirectLogin() {
-  sessionStorage.removeItem('authUser');
-  sessionStorage.removeItem('authPass');
-  window.location.replace('login.html');
+
+async function logout() {
+    console.log("Intentando logout...");
+    try {
+        const response = await fetch('http://localhost:8088/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...authHeaders() // tus headers de auth si aplica
+            },
+            credentials: 'include' // manda cookies de sesión
+        });
+
+        if (response.ok) {
+            // Redirige al login después de logout
+            window.location.href = '/login';
+        } else {
+            console.error('Error en logout, status:', response.status);
+        }
+    } catch (e) {
+        console.error('Error en logout:', e);
+    }
 }
-function logout() { redirectLogin(); }
 
 // ===== Role detection =====
 async function detectRole() {
