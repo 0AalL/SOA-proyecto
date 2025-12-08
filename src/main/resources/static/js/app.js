@@ -1,7 +1,6 @@
 
-
-const BASE_ALUMNOS = 'http://localhost:8088/api/alumnos';
-const BASE_CURSOS = 'http://localhost:8088/api/cursos';
+const BASE_ALUMNOS = 'http://20.96.172.6:8088/api/alumnos';
+const BASE_CURSOS = 'http://20.96.172.6:8088/api/cursos';
 const tablaBody = document.querySelector('#tablaAlumnos tbody');
 const tablaCursosBody = document.querySelector('#tablaCursos tbody');
 const viewAlumnos = document.getElementById('viewAlumnos');
@@ -487,7 +486,7 @@ function authHeaders() {
 async function logout() {
     console.log("Intentando logout...");
     try {
-        const response = await fetch('http://localhost:8088/logout', {
+        const response = await fetch('http://20.96.172.6:8088/logout', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

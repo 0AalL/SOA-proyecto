@@ -54,6 +54,10 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/index", true)
                         .failureUrl("/login?error=true")
                         .permitAll()
+                        .successHandler((request, response, authentication) -> {
+                            // Si el usuario ya estaba autenticado, va al index
+                            response.sendRedirect("/index");
+                        })
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
